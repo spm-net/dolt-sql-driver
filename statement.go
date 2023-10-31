@@ -2,6 +2,7 @@ package embedded
 
 import (
 	"database/sql/driver"
+	"time"
 
 	"github.com/dolthub/vitess/go/sqltypes"
 
@@ -35,7 +36,11 @@ func argsToBindings(args []driver.Value) (map[string]*querypb.BindVariable, erro
 	var err error
 	for i := range args {
 		vIdx := "v" + strconv.FormatInt(int64(i+1), 10)
-		bindings[vIdx], err = sqltypes.BuildBindVariable(args[i])
+		val := args[i]
+		if t, ok := val.(time.Time); ok {
+			val = t.Format(time.RFC3339Nano)
+		}
+		bindings[vIdx], err = sqltypes.BuildBindVariable(val)
 		if err != nil {
 			return nil, err
 		}
